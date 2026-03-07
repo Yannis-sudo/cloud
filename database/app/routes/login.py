@@ -10,7 +10,6 @@ from app.constants import ERROR_INVALID_CREDENTIALS, SUCCESS_LOGIN
 
 router = APIRouter(tags=["auth"])
 
-
 @router.post("/login", response_model=SuccessResponse, status_code=status.HTTP_200_OK)
 def login(
     request: LoginRequest,

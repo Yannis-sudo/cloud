@@ -1,8 +1,9 @@
 """Database models."""
 
 from sqlalchemy import Column, Integer, String
-from app.database import Base
+from app.database import Base, engine
 
+Base.metadata.create_all(bind=engine)
 
 class User(Base):
     """User database model."""
