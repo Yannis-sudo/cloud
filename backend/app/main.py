@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routes import login, createaccount
+from app.routes import login, createaccount, getemails
 
 settings = get_settings()
 app = FastAPI(
@@ -25,6 +25,7 @@ app.add_middleware(
 # Include routers
 app.include_router(login.router, prefix="/api")
 app.include_router(createaccount.router, prefix="/api")
+app.include_router(getemails.router, prefix="/api")
 
 
 @app.get("/", tags=["health"])

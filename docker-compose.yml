@@ -1,28 +1,26 @@
 version: '3.9'
 
 services:
-  database:
-    build: ./database
+  backend:
+    build: ./backend
     ports:
       - "5555:5555"
     volumes:
-      - ./database:/app
+      - ./backend:/app
     environment:
       - PYTHONUNBUFFERED=1
-      - DATABASE_URL=postgresql://admin:secret@postgres:5432/copilot_db # "postgres" = service name below
+      - DATABASE_URL=mongodb://mongodb:27017
+      - DATABASE_NAME=copilot
     depends_on:
-      - postgres
+      - mongodb
 
-  postgres:
-    build: ./postgres
+  mongodb:
+    image: mongo:7.0
     ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: copilot_db
+      - "27017:27017"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      
+      - mongo_data:/data/db
+
 volumes:
-  postgres_data:
+  mongo_data:
+

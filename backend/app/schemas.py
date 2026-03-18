@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, EmailStr, Field
 
-
+# Requests
 class CreateAccountRequest(BaseModel):
     """Request model for account creation."""
 
@@ -34,12 +34,31 @@ class LoginRequest(BaseModel):
             }
         }
 
+class GetEmailsRequest(BaseModel):
+    """Request model for retrieving emails."""
 
+    email: EmailStr
+    password: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "user@example.com",
+                "password": "securepassword123"
+            }
+        }
+
+# Responses
 class SuccessResponse(BaseModel):
     """Generic success response."""
 
     message: str
 
+class EmailsResponse(BaseModel):
+    """Response model for email retrieval."""
+
+    emails: list[dict]
+    message: str
 
 class ErrorResponse(BaseModel):
     """Generic error response."""
