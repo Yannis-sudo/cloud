@@ -26,7 +26,7 @@ def create_user(username: str, email: str, password: str):
     return db.users.insert_one({
         "id": user_id,
         "username": username,
-        "email": email,
+        "email": email.lower(),
         "password": password
     })
 

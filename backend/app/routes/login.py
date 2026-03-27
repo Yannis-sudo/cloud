@@ -13,7 +13,6 @@ router = APIRouter(tags=["auth"])
 def login(request: LoginRequest) -> SuccessResponse:
     """Authenticate a user."""
     init_db()
-
     if not verify_user(request.email, request.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

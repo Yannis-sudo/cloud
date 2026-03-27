@@ -28,20 +28,26 @@ def init_db():
     """Initialize MongoDB collections and indexes."""
     db = get_database()
     users = db.users
-    emails = db.emails
+    email_addresses = db.email_addresses  # Renamed from emails to email_addresses
     users.create_index("email", unique=True)
-    emails.create_index([("user_email", 1), ("email", 1)], unique=True)
+    email_addresses.create_index([("user_email", 1), ("email", 1)], unique=True)  # Updated index for email_addresses
 
     return db
+
 
 def get_user_emails(email: str):
     """Get associated email records for a user by user email."""
     db = init_db()
-    result = db.emails.find({"user_email": email})
-    return list(result)
+    # Check if there are any email records for this user
+    count = db.email_addresses.count_documents({"user_email": email.lower()})
+    if count == 0:
+        return "Email not found"
+    
+    # Return the list of email records
+    return list(db.email_addresses.find({"user_email": email.lower()}))
 
 
 def add_user_email(user_email: str, email: str, server: str, password: str):
     """Optional helper: add email account for user."""
     db = init_db()
-    return db.emails.insert_one({"user_email": user_email, "email": email, "server": server, "password": password})
+    return db.email_addresses.insert_one({"user_email": user_email.lower(), "email": email, "server": server, "password": password})

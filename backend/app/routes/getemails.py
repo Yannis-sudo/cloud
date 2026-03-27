@@ -6,7 +6,7 @@ from app.database import init_db, get_user_emails
 from app.auth import get_user_by_email, verify_user
 from app.schemas import EmailsResponse, GetEmailsRequest
 from app.modules.loademails import load_emails
-from constants import ERROR_INVALID_CREDENTIALS, EMAIL_NOT_FOUND
+from app.constants import ERROR_INVALID_CREDENTIALS, EMAIL_NOT_FOUND
 
 router = APIRouter(tags=["accounts"])
 
@@ -14,7 +14,9 @@ router = APIRouter(tags=["accounts"])
 @router.post("/getemails", response_model=EmailsResponse, status_code=status.HTTP_201_CREATED)
 def get_emails(request: GetEmailsRequest) -> EmailsResponse:
     """Retrieve emails."""
+    # Initialize the database
     init_db()
+    # Authorize the user by verifying email and password
     valid_user = verify_user(request.email, request.password)
     if not valid_user:
         raise HTTPException(
@@ -22,27 +24,19 @@ def get_emails(request: GetEmailsRequest) -> EmailsResponse:
             detail=ERROR_INVALID_CREDENTIALS,
         )
 
-    user = get_user_by_email(request.email)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=EMAIL_NOT_FOUND,
+    # Check if the email address is saved in the email_addresses collection
+    email_record = get_user_emails(request.email)
+    if not email_record or email_record == "Email not found":
+        return EmailsResponse(
+            emails=[],
+            message=EMAIL_NOT_FOUND,
         )
 
-    email_records = get_user_emails(request.email)
-    # load_emails can optionally process external mailbox retrieval workflow
-    load_emails(request.email)
+    # If email is found, run the function to load emails from the email server
+    emails = load_emails(request.email)
 
+    # Return the emails retrieved from the server
     return EmailsResponse(
-        emails=[
-            {
-                "id": str(record.get("_id")),
-                "email": record.get("email"),
-                "server": record.get("server"),
-                "password": record.get("password"),
-            }
-            for record in email_records
-        ],
+        emails=emails,
         message="Emails retrieved successfully",
     )

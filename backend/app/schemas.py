@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, Field
 class CreateAccountRequest(BaseModel):
     """Request model for account creation."""
 
-    email: EmailStr
+    email: str
     username: str = Field(..., min_length=1, max_length=255)
     password: str = Field(..., min_length=6)
 
@@ -23,8 +23,8 @@ class CreateAccountRequest(BaseModel):
 class LoginRequest(BaseModel):
     """Request model for user login."""
 
-    email: EmailStr
-    password: str = Field(..., min_length=1)
+    email: str
+    password: str
 
     class Config:
         json_schema_extra = {
@@ -37,7 +37,7 @@ class LoginRequest(BaseModel):
 class GetEmailsRequest(BaseModel):
     """Request model for retrieving emails."""
 
-    email: EmailStr
+    email: str
     password: str
 
     class Config:
