@@ -48,6 +48,28 @@ class GetEmailsRequest(BaseModel):
             }
         }
 
+class CreateEmailServerRequest(BaseModel):
+    """Request model for adding email server credentials."""
+
+    email: str
+    server_incoming: str
+    server_outgoing: str
+    server_incoming_port: int
+    server_outgoing_port: int
+    password: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "user@example.com",
+                "server_incoming": "imap.gmail.com",
+                "server_outgoing": "smtp.gmail.com",
+                "server_incoming_port": 993,
+                "server_outgoing_port": 587,
+                "password": "securepassword123"
+            }
+        }
+
 # Responses
 class SuccessResponse(BaseModel):
     """Generic success response."""
@@ -65,3 +87,4 @@ class ErrorResponse(BaseModel):
 
     message: str
     detail: str | None = None
+
