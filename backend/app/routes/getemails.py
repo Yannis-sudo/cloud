@@ -33,10 +33,17 @@ def get_emails(request: GetEmailsRequest) -> EmailsResponse:
         )
 
     # If email is found, run the function to load emails from the email server
-    emails = load_emails(request.email)
+    email_data = load_emails(request.email)
+    
+    # Check if email data was successfully retrieved
+    if not email_data:
+        return EmailsResponse(
+            emails=[],
+            message="Failed to load emails from server",
+        )
 
-    # Return the emails retrieved from the server
+    # Return the emails and folders retrieved from the server
     return EmailsResponse(
-        emails=emails,
+        emails=email_data,
         message="Emails retrieved successfully",
     )

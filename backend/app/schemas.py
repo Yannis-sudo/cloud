@@ -79,7 +79,7 @@ class SuccessResponse(BaseModel):
 class EmailsResponse(BaseModel):
     """Response model for email retrieval."""
 
-    emails: list[dict]
+    emails: dict
     message: str
 
 class ErrorResponse(BaseModel):
