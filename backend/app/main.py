@@ -1,10 +1,11 @@
 """FastAPI application initialization."""
 
+from app.routes.email import getemails, addemailserver
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routes import login, createaccount, getemails, addemailserver
+from app.routes import login, createaccount
 
 settings = get_settings()
 app = FastAPI(

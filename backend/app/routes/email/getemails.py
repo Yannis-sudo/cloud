@@ -1,11 +1,11 @@
-"""Account creation endpoints."""
+"""Get emails endpoint."""
 
 from fastapi import APIRouter, HTTPException, status
 
 from app.database import init_db, get_user_emails
-from app.auth import get_user_by_email, verify_user
+from app.auth import verify_user
 from app.schemas import EmailsResponse, GetEmailsRequest
-from app.modules.loademails import load_emails
+from app.modules.email.loademails import load_emails
 from app.constants import ERROR_INVALID_CREDENTIALS, EMAIL_NOT_FOUND
 
 router = APIRouter(tags=["accounts"])

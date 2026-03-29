@@ -3,6 +3,7 @@
 from pydantic import BaseModel, EmailStr, Field
 
 # Requests
+# Account requests
 class CreateAccountRequest(BaseModel):
     """Request model for account creation."""
 
@@ -34,6 +35,8 @@ class LoginRequest(BaseModel):
             }
         }
 
+
+# Email requests
 class GetEmailsRequest(BaseModel):
     """Request model for retrieving emails."""
 
@@ -69,6 +72,23 @@ class CreateEmailServerRequest(BaseModel):
                 "password": "securepassword123"
             }
         }
+
+class AddFolderRequest(BaseModel):
+    """Request model for adding a new folder."""
+    
+    email: str
+    folder_name: str
+    password: str # The auth password for the account of this website
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "user@example.com",
+                "folder_name": "Important",
+                "password": "securepassword123"
+            }
+        }
+
 
 # Responses
 class SuccessResponse(BaseModel):
