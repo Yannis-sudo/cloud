@@ -1,6 +1,6 @@
 """FastAPI application initialization."""
 
-from app.routes.email import getemails, addemailserver
+from app.routes.email import getemails, addemailserver, addfolder, getfolders
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -28,7 +28,8 @@ app.include_router(login.router, prefix="/api")
 app.include_router(createaccount.router, prefix="/api")
 app.include_router(getemails.router, prefix="/api")
 app.include_router(addemailserver.router, prefix="/api")
-
+app.include_router(addfolder.router, prefix="/api")
+app.include_router(getfolders.router, prefix="/api")
 
 @app.get("/", tags=["health"])
 async def root() -> dict[str, str]:

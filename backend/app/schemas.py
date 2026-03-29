@@ -79,12 +79,28 @@ class AddFolderRequest(BaseModel):
     email: str
     folder_name: str
     password: str # The auth password for the account of this website
+    parent_folder: str | None = None  # Optional parent folder for creating subfolders
     
     class Config:
         json_schema_extra = {
             "example": {
                 "email": "user@example.com",
                 "folder_name": "Important",
+                "password": "securepassword123",
+                "parent_folder": None
+            }
+        }
+
+class GetFoldersRequest(BaseModel):
+    """Request model for retrieving email folders."""
+    
+    email: str
+    password: str # The auth password for the account of this website
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "user@example.com",
                 "password": "securepassword123"
             }
         }
@@ -108,3 +124,7 @@ class ErrorResponse(BaseModel):
     message: str
     detail: str | None = None
 
+class GetFoldersResponse(BaseModel):
+    """Response model for retrieving email folders."""
+    
+    folders: list[str]
