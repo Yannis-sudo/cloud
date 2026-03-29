@@ -91,6 +91,26 @@ class AddFolderRequest(BaseModel):
             }
         }
 
+class SendEmailRequest(BaseModel):
+    """Request model for sending an email."""
+
+    to: EmailStr
+    subject: str
+    body: str
+    email: str # The sender's email address (the account associated with this website)
+    password: str # The auth password for the account of this website
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "to": "recipient@example.com",
+                "subject": "Test Email",
+                "body": "This is a test email.",
+                "email": "user@example.com",
+                "password": "securepassword123"
+            }
+        }
+
 class GetFoldersRequest(BaseModel):
     """Request model for retrieving email folders."""
     
@@ -128,3 +148,8 @@ class GetFoldersResponse(BaseModel):
     """Response model for retrieving email folders."""
     
     folders: list[str]
+
+class SendEmailResponse(BaseModel):
+    """Response model for sending an email."""
+
+    success: bool
