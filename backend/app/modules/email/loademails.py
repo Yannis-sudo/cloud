@@ -1,9 +1,10 @@
 from app.database import get_user_emails
-import imapclient
+import imaplib
 import email
 from email.header import decode_header
 import quopri
 import base64
+import re
 import logging
 
 logger = logging.getLogger(__name__)
@@ -196,65 +197,116 @@ def load_emails(email: str):
     password = email_config.get('password')
     
     # Load emails using new function
-    return load_emails_from_folders(email_address, password, server_incoming)
+    return load_emails_from_folders(email_address, password, server_incoming, server_incoming_port)
 
 
-def load_emails_from_folders(email_address, password, server_incoming):
-    """Hauptfunktion: Alle Ordner durchsuchen, E-Mails laden mit imapclient und Standard-Email-Bibliothek"""
+def load_emails_from_folders(email_address, password, server_incoming, server_incoming_port=993):
+    """Hauptfunktion: Alle Ordner durchsuchen, E-Mails laden mit imaplib und Standard-Email-Bibliothek"""
     emails_result = []
     folder_list = []
     
     try:
-        # Verbindung mit imapclient
-        client = imapclient.IMAPClient(server_incoming, ssl=True)
-        client.login(email_address, password)
+        # Verbindung mit imaplib (same as getfolders.py)
+        imap = imaplib.IMAP4_SSL(server_incoming, server_incoming_port)
+        imap.login(email_address, password)
 
-        # Alle Ordner abrufen (UTF-8 automatisch)
-        folders = client.list_folders()
-        folder_dict = {f[2]: f[2] for f in folders}  # UTF-8 Namen
-        folder_list = list(folder_dict.keys())
+        # Ordner abrufen mit der gleichen Logik wie getfolders.py
+        status, folders = imap.list()
+        if status != "OK" or not folders:
+            return {"folders": [], "emails": []}
 
-        for folder_utf8 in folder_dict.keys():
-            try:
-                client.select_folder(folder_utf8, readonly=True)
-                uids = client.search(['ALL'])
+        for folder in folders:
+            folder_decoded = folder.decode()
+
+            # Match the last part after the separator (robust for GMX)
+            # This handles: (\HasNoChildren) "/" INBOX
+            # And: (\HasChildren) "/" "test folder"
+            # And: (\HasNoChildren) "/" "test folder/test"
+            
+            match = re.search(r'"/"?\s*"?(.+?)"?$', folder_decoded)
+            if match:
+                name = match.group(1)
                 
-                # Nur die letzten 5 E-Mails pro Ordner
-                for uid in uids[-5:]:
-                    raw_message = client.fetch([uid], ['BODY[]', 'FLAGS'])
-                    msg = email.message_from_bytes(raw_message[uid][b'BODY[]'])
-                    
-                    # Body mit manueller Dekodierung
-                    body = get_body(msg)
-                    
-                    # Anhänge extrahieren
-                    attachments = extract_attachments(msg)
-                    
-                    # Header mit manueller Dekodierung
-                    from_str = decode_mime_header(msg["from"])
-                    subject = decode_mime_header(msg["subject"])
-                    date = decode_mime_header(msg["date"])
-                    
-                    emails_result.append({
-                        'folder': folder_utf8,
-                        'from': from_str,
-                        'subject': subject or '',
-                        'date': date or '',
-                        'message_id': str(uid),
-                        'body': body,
-                        'attachments': attachments,
-                        'has_attachments': len(attachments) > 0
-                    })
+                # Decode IMAP UTF-7 special characters using imaplib
+                try:
+                    # Try proper UTF-7 decoding first
+                    if isinstance(name, str):
+                        name_bytes = name.encode('ascii')
+                        name = imaplib._decode_utf7(name_bytes)
+                    else:
+                        name = imaplib._decode_utf7(name)
+                except Exception as e:
+                    # Fallback: handle common encodings manually
+                    name = name.replace('&APw-', 'ü').replace('&AP-', 'ä').replace('&AOQ-', 'ß').replace('&APg-', 'ö').replace('&Aw-', 'Ä').replace('&Ow-', 'Ö').replace('&Uw-', 'Ü')
+                
+                # Skip empty separators only
+                if name and name != '/' and name.strip():
+                    folder_list.append(name)
+
+        # Remove duplicates and sort
+        folder_list = sorted(list(set(folder_list)))
+
+        # E-Mails aus jedem Ordner laden
+        for folder_name in folder_list:
+            try:
+                # Properly encode folder name for IMAP select command
+                if isinstance(folder_name, str):
+                    # Try to encode as UTF-7, fallback to modified UTF-7 for IMAP
+                    try:
+                        encoded_folder = imaplib._encode_utf7(folder_name)
+                        select_arg = f'"{encoded_folder.decode()}"'
+                    except:
+                        # Manual encoding fallback for problematic characters
+                        encoded_name = folder_name.replace('ü', '&APw-').replace('ä', '&AP-').replace('ö', '&APg-').replace('ß', '&AOQ-')
+                        select_arg = f'"{encoded_name}"'
+                else:
+                    select_arg = f'"{folder_name}"'
+                
+                imap.select(select_arg, readonly=True)
+                status, uids = imap.search(None, 'ALL')
+                
+                if status == "OK" and uids:
+                    uid_list = uids[0].split()
+                    # Nur die letzten 5 E-Mails pro Ordner
+                    for uid in uid_list[-5:]:
+                        status, msg_data = imap.fetch(uid, '(BODY.PEEK[])')
+                        if status == "OK":
+                            raw_message = msg_data[0][1]
+                            msg = email.message_from_bytes(raw_message)
+                            
+                            # Body mit manueller Dekodierung
+                            body = get_body(msg)
+                            
+                            # Anhänge extrahieren
+                            attachments = extract_attachments(msg)
+                            
+                            # Header mit manueller Dekodierung
+                            from_str = decode_mime_header(msg["from"])
+                            subject = decode_mime_header(msg["subject"])
+                            date = decode_mime_header(msg["date"])
+                            
+                            emails_result.append({
+                                'folder': folder_name,
+                                'from': from_str,
+                                'subject': subject or '',
+                                'date': date or '',
+                                'message_id': uid.decode(),
+                                'body': body,
+                                'attachments': attachments,
+                                'has_attachments': len(attachments) > 0
+                            })
                     
             except Exception as e:
                 # Ordner überspringen, falls Fehler
+                print(f"Error processing folder {folder_name}: {e}")
                 continue
 
-        client.logout()
+        imap.logout()
         return {
             "folders": folder_list,
             "emails": emails_result
         }
         
     except Exception as e:
+        print(f"Error in load_emails_from_folders: {e}")
         return {"folders": [], "emails": []}
