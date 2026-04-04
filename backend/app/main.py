@@ -2,6 +2,7 @@
 
 from app.routes.email import getemails, addemailserver, addfolder, getfolders
 from app.routes.email.sendemail import router as send_email_router
+from app.routes.notes import addnote, addlist, getlists, getnotes
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -32,6 +33,10 @@ app.include_router(addemailserver.router, prefix="/api")
 app.include_router(addfolder.router, prefix="/api")
 app.include_router(getfolders.router, prefix="/api")
 app.include_router(send_email_router, prefix="/api")
+app.include_router(addnote.router, prefix="/api")
+app.include_router(addlist.router, prefix="/api")
+app.include_router(getlists.router, prefix="/api")
+app.include_router(getnotes.router, prefix="/api")
 
 @app.get("/", tags=["health"])
 async def root() -> dict[str, str]:

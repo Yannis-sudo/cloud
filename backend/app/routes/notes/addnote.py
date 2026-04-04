@@ -18,8 +18,8 @@ def add_note_endpoint(request: AddNoteRequest) -> SuccessResponse:
     """Add a new note."""
     try:
         init_db()
-        # Authorize the user by verifying username and password
-        valid_user = verify_user(request.username, request.password)
+        # Authorize the user by verifying email and password
+        valid_user = verify_user(request.email, request.password)
         if not valid_user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -28,14 +28,14 @@ def add_note_endpoint(request: AddNoteRequest) -> SuccessResponse:
 
         # Call the add_note function with all parameters from the request
         add_note(
-            username=request.username,
+            username=request.email,  # Use email as username for consistency
             password=request.password,
             title=request.title,
             description=request.description,
             priority=request.priority,
             author_name=request.author_name,
             author_email=request.author_email,
-            list=request.list
+            list_id=request.list_id  # Use list_id instead of list
         )
 
         return SuccessResponse(message="Note added successfully")

@@ -158,25 +158,217 @@ class SendEmailResponse(BaseModel):
 class AddNoteRequest(BaseModel):
     """Request model for adding a new note."""
 
-    username: str
+    email: str  # The email for authentication
     password: str  # The auth password for the account
     title: str
     description: str
-    priority: str = Field(..., regex="^(low|medium|high)$")
+    priority: str = Field(..., pattern="^(low|medium|high)$")
     author_name: str
     author_email: EmailStr
-    list: list
+    list_id: str  # Use list_id instead of list array
 
     class Config:
         json_schema_extra = {
             "example": {
-                "username": "john_doe",
+                "email": "john@example.com",
                 "password": "securepassword123",
                 "title": "Meeting Notes",
                 "description": "Important points from the team meeting",
                 "priority": "high",
                 "author_name": "John Doe",
                 "author_email": "john@example.com",
-                "list": ["item1", "item2", "item3"]
+                "list_id": "507f1f77bcf86cd799439011"
+            }
+        }
+
+class AddListRequest(BaseModel):
+    """Request model for adding a new list."""
+
+    email: str  # The email for authentication
+    password: str  # The auth password for the account
+    list_name: str
+    creator_email: EmailStr
+    description: str = ""
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "john@example.com",
+                "password": "securepassword123",
+                "list_name": "Project Tasks",
+                "creator_email": "john@example.com",
+                "description": "Tasks related to the current project"
+            }
+        }
+
+class AddListResponse(BaseModel):
+    """Response model for adding a new list."""
+
+    list_id: str
+    list_name: str
+    message: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "list_id": "507f1f77bcf86cd799439011",
+                "list_name": "Project Tasks",
+                "message": "List added successfully"
+            }
+        }
+
+class GetListsRequest(BaseModel):
+    """Request model for retrieving user's lists."""
+
+    email: str  # The email for authentication
+    password: str  # The auth password for the account
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=20, ge=1, le=100)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "john@example.com",
+                "password": "securepassword123",
+                "page": 1,
+                "page_size": 20
+            }
+        }
+
+class ListInfo(BaseModel):
+    """Model for individual list information."""
+
+    list_id: str
+    list_name: str
+    description: str = ""
+    created_by: str
+    admins: list[str]
+    created_at: str | None = None
+    updated_at: str | None = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "list_id": "507f1f77bcf86cd799439011",
+                "list_name": "Project Tasks",
+                "description": "Tasks related to the current project",
+                "created_by": "john@example.com",
+                "admins": ["john@example.com", "admin@example.com"],
+                "created_at": "2023-01-01T00:00:00Z",
+                "updated_at": "2023-01-01T00:00:00Z"
+            }
+        }
+
+class GetListsResponse(BaseModel):
+    """Response model for retrieving user's lists."""
+
+    lists: list[ListInfo]
+    total_count: int
+    page: int
+    page_size: int
+    total_pages: int
+    message: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "lists": [
+                    {
+                        "list_id": "507f1f77bcf86cd799439011",
+                        "list_name": "Project Tasks",
+                        "description": "Tasks related to the current project",
+                        "created_by": "john@example.com",
+                        "admins": ["john@example.com"],
+                        "created_at": "2023-01-01T00:00:00Z",
+                        "updated_at": "2023-01-01T00:00:00Z"
+                    }
+                ],
+                "total_count": 1,
+                "page": 1,
+                "page_size": 20,
+                "total_pages": 1,
+                "message": "Lists retrieved successfully"
+            }
+        }
+
+class GetNotesRequest(BaseModel):
+    """Request model for retrieving notes from a specific list."""
+
+    email: str  # The email for authentication
+    password: str  # The auth password for the account
+    list_id: str  # The ID of the list to retrieve notes from
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=20, ge=1, le=100)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "john@example.com",
+                "password": "securepassword123",
+                "list_id": "507f1f77bcf86cd799439011",
+                "page": 1,
+                "page_size": 20
+            }
+        }
+
+class NoteInfo(BaseModel):
+    """Model for individual note information."""
+
+    note_id: str
+    title: str
+    description: str
+    priority: str = Field(..., pattern="^(low|medium|high)$")
+    author_name: str
+    author_email: str
+    list_id: str
+    created_at: str | None = None
+    updated_at: str | None = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "note_id": "507f1f77bcf86cd799439012",
+                "title": "Meeting Notes",
+                "description": "Important points from the team meeting",
+                "priority": "high",
+                "author_name": "John Doe",
+                "author_email": "john@example.com",
+                "list_id": "507f1f77bcf86cd799439011",
+                "created_at": "2023-01-01T00:00:00Z",
+                "updated_at": "2023-01-01T00:00:00Z"
+            }
+        }
+
+class GetNotesResponse(BaseModel):
+    """Response model for retrieving notes from a specific list."""
+
+    notes: list[NoteInfo]
+    total_count: int
+    page: int
+    page_size: int
+    total_pages: int
+    message: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "notes": [
+                    {
+                        "note_id": "507f1f77bcf86cd799439012",
+                        "title": "Meeting Notes",
+                        "description": "Important points from the team meeting",
+                        "priority": "high",
+                        "author_name": "John Doe",
+                        "author_email": "john@example.com",
+                        "list_id": "507f1f77bcf86cd799439011",
+                        "created_at": "2023-01-01T00:00:00Z",
+                        "updated_at": "2023-01-01T00:00:00Z"
+                    }
+                ],
+                "total_count": 1,
+                "page": 1,
+                "page_size": 20,
+                "total_pages": 1,
+                "message": "Notes retrieved successfully"
             }
         }
