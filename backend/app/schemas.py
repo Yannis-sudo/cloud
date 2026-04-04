@@ -153,3 +153,30 @@ class SendEmailResponse(BaseModel):
     """Response model for sending an email."""
 
     success: bool
+
+# Notes requests
+class AddNoteRequest(BaseModel):
+    """Request model for adding a new note."""
+
+    username: str
+    password: str  # The auth password for the account
+    title: str
+    description: str
+    priority: str = Field(..., regex="^(low|medium|high)$")
+    author_name: str
+    author_email: EmailStr
+    list: list
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "john_doe",
+                "password": "securepassword123",
+                "title": "Meeting Notes",
+                "description": "Important points from the team meeting",
+                "priority": "high",
+                "author_name": "John Doe",
+                "author_email": "john@example.com",
+                "list": ["item1", "item2", "item3"]
+            }
+        }
