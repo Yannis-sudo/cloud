@@ -393,3 +393,53 @@ class GetNotesResponse(BaseModel):
                 "message": "Notes retrieved successfully"
             }
         }
+
+
+class DeleteListRequest(BaseModel):
+    """Request model for deleting a list."""
+
+    email: str  # The email for authentication
+    password: str  # The password for authentication
+    list_id: str  # The ID of the list to delete
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "user@example.com",
+                "password": "securepassword123",
+                "list_id": "507f1f77bcf86cd799439011"
+            }
+        }
+
+
+class DeleteListResponse(BaseModel):
+    """Response model for deleting a list."""
+
+    message: str
+    list_id: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "List deleted successfully",
+                "list_id": "507f1f77bcf86cd799439011"
+            }
+        }
+
+class UpdateNoteColumnRequest(BaseModel):
+    """Request model for updating a note's column."""
+
+    email: str  # The email for authentication
+    password: str  # The password for authentication
+    note_id: str  # The ObjectId of the note to update
+    new_column: str = Field(..., pattern="^(backlog|todo|in-progress|done)$")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "user@example.com",
+                "password": "securepassword123",
+                "note_id": "507f1f77bcf86cd799439012",
+                "new_column": "in-progress"
+            }
+        }
