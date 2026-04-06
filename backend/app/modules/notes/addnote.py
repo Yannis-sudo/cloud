@@ -119,7 +119,7 @@ def check_user_permission(email: str, list_id: str) -> Dict[str, Any]:
 
 
 def add_note_to_db(title: str, description: str, priority: str, author_name: str, 
-                   author_email: str, list_id: str) -> Optional[InsertOneResult]:
+                   author_email: str, list_id: str, column: str = "todo") -> Optional[InsertOneResult]:
     """Add a note to the specified list in the database using list_id.
     
     Args:
@@ -129,6 +129,7 @@ def add_note_to_db(title: str, description: str, priority: str, author_name: str
         author_name: The name of the note author
         author_email: The email address of the note author
         list_id: The ObjectId of the list to add the note to
+        column: The column for the note (backlog, todo, in-progress, done)
         
     Returns:
         InsertOneResult if successful, None otherwise
@@ -143,6 +144,7 @@ def add_note_to_db(title: str, description: str, priority: str, author_name: str
             "author_name": author_name,
             "author_email": author_email.lower(),
             "list_id": list_id,  # Use list_id instead of list_name
+            "column": column,  # Add column field
             "created_at": None,  # Will be set by MongoDB
             "updated_at": None   # Will be set by MongoDB
         }
@@ -160,7 +162,7 @@ def add_note_to_db(title: str, description: str, priority: str, author_name: str
 
 
 def add_note(username: str, password: str, title: str, description: str, 
-             priority: str, author_name: str, author_email: str, list_id: str):
+             priority: str, author_name: str, author_email: str, list_id: str, column: str = "todo"):
     """Add a new note to the system with permission checking using list_id.
     
     Args:
@@ -172,6 +174,7 @@ def add_note(username: str, password: str, title: str, description: str,
         author_name: The name of the note author
         author_email: The email address of the note author
         list_id: The ObjectId of the list to add the note to
+        column: The column for the note (backlog, todo, in-progress, done)
         
     Raises:
         ValueError: If user doesn't have permission or list doesn't exist
@@ -188,7 +191,7 @@ def add_note(username: str, password: str, title: str, description: str,
             raise ValueError(permission_result["message"])
         
         # Add the note to the database
-        result = add_note_to_db(title, description, priority, author_name, author_email, list_id)
+        result = add_note_to_db(title, description, priority, author_name, author_email, list_id, column)
         
         if result is None:
             raise Exception("Failed to add note to database")

@@ -126,6 +126,7 @@ def get_notes_from_list(email: str, list_id: str, page: int = 1, page_size: int 
                 "author_name": note_doc.get("author_name", ""),
                 "author_email": note_doc.get("author_email", ""),
                 "list_id": note_doc.get("list_id", ""),
+                "column": note_doc.get("column", "todo"),  # Add column field with default
                 "created_at": str(note_doc.get("created_at")) if note_doc.get("created_at") else None,
                 "updated_at": str(note_doc.get("updated_at")) if note_doc.get("updated_at") else None
             }

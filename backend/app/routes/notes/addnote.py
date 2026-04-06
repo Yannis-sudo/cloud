@@ -35,7 +35,8 @@ def add_note_endpoint(request: AddNoteRequest) -> SuccessResponse:
             priority=request.priority,
             author_name=request.author_name,
             author_email=request.author_email,
-            list_id=request.list_id  # Use list_id instead of list
+            list_id=request.list_id,  # Use list_id instead of list
+            column=request.column  # Add column parameter
         )
 
         return SuccessResponse(message="Note added successfully")

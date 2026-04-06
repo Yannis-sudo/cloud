@@ -138,6 +138,23 @@ class EmailsResponse(BaseModel):
     emails: dict
     message: str
 
+class LoginResponse(BaseModel):
+    """Response model for successful user login."""
+
+    message: str
+    username: str
+    email: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "Login successful",
+                "username": "john_doe",
+                "email": "user@example.com"
+            }
+        }
+
+
 class ErrorResponse(BaseModel):
     """Generic error response."""
 
@@ -166,6 +183,7 @@ class AddNoteRequest(BaseModel):
     author_name: str
     author_email: EmailStr
     list_id: str  # Use list_id instead of list array
+    column: str = Field(default="todo", pattern="^(backlog|todo|in-progress|done)$")
 
     class Config:
         json_schema_extra = {
@@ -177,7 +195,8 @@ class AddNoteRequest(BaseModel):
                 "priority": "high",
                 "author_name": "John Doe",
                 "author_email": "john@example.com",
-                "list_id": "507f1f77bcf86cd799439011"
+                "list_id": "507f1f77bcf86cd799439011",
+                "column": "todo"
             }
         }
 
@@ -321,6 +340,7 @@ class NoteInfo(BaseModel):
     author_name: str
     author_email: str
     list_id: str
+    column: str = Field(..., pattern="^(backlog|todo|in-progress|done)$")
     created_at: str | None = None
     updated_at: str | None = None
 
@@ -334,6 +354,7 @@ class NoteInfo(BaseModel):
                 "author_name": "John Doe",
                 "author_email": "john@example.com",
                 "list_id": "507f1f77bcf86cd799439011",
+                "column": "todo",
                 "created_at": "2023-01-01T00:00:00Z",
                 "updated_at": "2023-01-01T00:00:00Z"
             }
