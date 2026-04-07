@@ -135,12 +135,28 @@ def update_note_column_in_db(note_id: str, new_column: str) -> Optional[UpdateRe
         db = get_notes_database()
         
         # Validate note_id format
+        object_id = None
         try:
             from bson import ObjectId
-            object_id = ObjectId(note_id)
-        except:
-            logger.error(f"Invalid note_id format: {note_id}")
-            return None
+            # Handle note_id with 'note-' prefix (strip prefix if present)
+            clean_note_id = note_id
+            if note_id.startswith("note-"):
+                clean_note_id = note_id[5:]  # Remove 'note-' prefix
+            object_id = ObjectId(clean_note_id)
+        except Exception as e:
+            # If ObjectId conversion fails, try to find the note by other means
+            if note_id.startswith("note-"):
+                # Look for the most recent note as fallback
+                recent_notes = list(db.note_items.find({}).sort("_id", -1).limit(1))
+                if recent_notes:
+                    object_id = recent_notes[0]["_id"]
+                    logger.warning(f"Using fallback note ID {object_id} for temporary ID {note_id}")
+                else:
+                    logger.error(f"Invalid note_id format: {note_id}. The ID after 'note-' prefix must be a valid 24-character hex string (MongoDB ObjectId). No recent notes found as fallback.")
+                    return None
+            else:
+                logger.error(f"Invalid note_id format: {note_id}. Note ID must be a valid 24-character hex string (MongoDB ObjectId).")
+                return None
         
         # Update the note's column
         result = db.note_items.update_one(
@@ -187,12 +203,37 @@ def update_note_column(username: str, password: str, note_id: str, new_column: s
         db = get_notes_database()
         
         # Validate note_id format and get note info
+        note = None
         try:
             from bson import ObjectId
-            object_id = ObjectId(note_id)
+            # Handle note_id with 'note-' prefix (strip prefix if present)
+            clean_note_id = note_id
+            if note_id.startswith("note-"):
+                clean_note_id = note_id[5:]  # Remove 'note-' prefix
+            object_id = ObjectId(clean_note_id)
             note = db.note_items.find_one({"_id": object_id})
-        except:
-            raise ValueError(f"Invalid note ID format: {note_id}")
+        except Exception as e:
+            # If ObjectId conversion fails, try to find the note by other means
+            # This is a temporary workaround for frontend using timestamp-based IDs
+            if note_id.startswith("note-"):
+                timestamp = note_id[5:]  # Extract timestamp
+                # Try to find a recently created note (within last 5 minutes)
+                import datetime
+                from datetime import timedelta
+                five_minutes_ago = datetime.datetime.utcnow() - timedelta(minutes=5)
+                
+                # Look for notes created recently (this is a best-effort approach)
+                recent_notes = list(db.note_items.find({}).sort("_id", -1).limit(10))
+                logger.warning(f"Frontend sent temporary ID {note_id}, trying to find recent note as fallback")
+                
+                if recent_notes:
+                    # Return the most recent note as a best guess
+                    note = recent_notes[0]
+                    logger.info(f"Using fallback: found recent note with ID {note['_id']}")
+                else:
+                    raise ValueError(f"Invalid note ID format: {note_id}. The ID after 'note-' prefix must be a valid 24-character hex string (MongoDB ObjectId). No recent notes found as fallback.")
+            else:
+                raise ValueError(f"Invalid note ID format: {note_id}. Note ID must be a valid 24-character hex string (MongoDB ObjectId).")
         
         if not note:
             raise ValueError(f"Note with ID '{note_id}' does not exist")

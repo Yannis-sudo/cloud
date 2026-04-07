@@ -26,13 +26,14 @@ def get_notes_endpoint(request: GetNotesRequest) -> GetNotesResponse:
                 detail=ERROR_INVALID_CREDENTIALS,
             )
 
-        # Call the get_notes function with pagination parameters
+        # Call the get_notes function with pagination and sorting parameters
         notes_result = get_notes(
             email=request.email,
             password=request.password,
             list_id=request.list_id,
             page=request.page,
-            page_size=request.page_size
+            page_size=request.page_size,
+            sort_by=request.sort_by
         )
 
         return GetNotesResponse(

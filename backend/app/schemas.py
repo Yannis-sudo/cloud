@@ -171,6 +171,13 @@ class SendEmailResponse(BaseModel):
 
     success: bool
 
+class AddNoteResponse(BaseModel):
+    """Response model for adding a new note."""
+
+    success: bool
+    message: str
+    note_id: str  # The MongoDB ObjectId of the created note
+
 # Notes requests
 class AddNoteRequest(BaseModel):
     """Request model for adding a new note."""
@@ -318,6 +325,7 @@ class GetNotesRequest(BaseModel):
     list_id: str  # The ID of the list to retrieve notes from
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)
+    sort_by: str | None = Field(default=None, description="Optional sorting method (e.g., 'priority')")
 
     class Config:
         json_schema_extra = {
@@ -326,7 +334,8 @@ class GetNotesRequest(BaseModel):
                 "password": "securepassword123",
                 "list_id": "507f1f77bcf86cd799439011",
                 "page": 1,
-                "page_size": 20
+                "page_size": 20,
+                "sort_by": "priority"
             }
         }
 

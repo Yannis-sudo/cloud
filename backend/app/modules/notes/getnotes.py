@@ -71,7 +71,7 @@ def check_user_list_view_permission(email: str, list_id: str) -> Dict[str, Any]:
         return {"has_permission": False, "message": "Unexpected error while checking permissions"}
 
 
-def get_notes_from_list(email: str, list_id: str, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
+def get_notes_from_list(email: str, list_id: str, page: int = 1, page_size: int = 20, sort_by: str = None) -> Dict[str, Any]:
     """Get all notes from a specific list that the user has permission to view.
     
     Args:
@@ -79,6 +79,7 @@ def get_notes_from_list(email: str, list_id: str, page: int = 1, page_size: int 
         list_id: The ID of the list to retrieve notes from
         page: Page number for pagination (1-based)
         page_size: Number of items per page
+        sort_by: Optional sorting method (e.g., 'priority' for priority-based sorting)
         
     Returns:
         dict: Contains notes array and pagination metadata
@@ -111,8 +112,32 @@ def get_notes_from_list(email: str, list_id: str, page: int = 1, page_size: int 
         # Get total count first
         total_count = db.note_items.count_documents(notes_query)
         
-        # Get paginated notes
-        notes_cursor = db.note_items.find(notes_query).skip(skip_count).limit(page_size)
+        # Get paginated notes with optional sorting
+        if sort_by == 'priority':
+            # Use aggregation pipeline for proper priority sorting
+            # Priority order: high (3) -> medium (2) -> low (1)
+            pipeline = [
+                {"$match": notes_query},
+                {"$addFields": {
+                    "priority_order": {
+                        "$switch": {
+                            "branches": [
+                                {"case": {"$eq": ["$priority", "high"]}, "then": 3},
+                                {"case": {"$eq": ["$priority", "medium"]}, "then": 2},
+                                {"case": {"$eq": ["$priority", "low"]}, "then": 1}
+                            ],
+                            "default": 2
+                        }
+                    }
+                }},
+                {"$sort": {"priority_order": -1, "created_at": -1}},
+                {"$skip": skip_count},
+                {"$limit": page_size}
+            ]
+            notes_cursor = db.note_items.aggregate(pipeline)
+        else:
+            # Default: no specific sorting (maintain insertion order)
+            notes_cursor = db.note_items.find(notes_query).skip(skip_count).limit(page_size)
         
         # Convert MongoDB documents to list format
         notes_data = []
@@ -155,7 +180,7 @@ def get_notes_from_list(email: str, list_id: str, page: int = 1, page_size: int 
         raise Exception(f"Failed to retrieve notes: {str(e)}")
 
 
-def get_notes(email: str, password: str, list_id: str, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
+def get_notes(email: str, password: str, list_id: str, page: int = 1, page_size: int = 20, sort_by: str = None) -> Dict[str, Any]:
     """Get notes for a user with authentication check.
     
     Args:
@@ -164,6 +189,7 @@ def get_notes(email: str, password: str, list_id: str, page: int = 1, page_size:
         list_id: The ID of the list to retrieve notes from
         page: Page number for pagination (1-based)
         page_size: Number of items per page
+        sort_by: Optional sorting method (e.g., 'priority' for priority-based sorting)
         
     Returns:
         dict: Contains notes array and pagination metadata
@@ -174,7 +200,7 @@ def get_notes(email: str, password: str, list_id: str, page: int = 1, page_size:
     """
     try:
         # Get notes from the specified list
-        result = get_notes_from_list(email, list_id, page, page_size)
+        result = get_notes_from_list(email, list_id, page, page_size, sort_by)
         
         return result
         

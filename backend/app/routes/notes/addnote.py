@@ -5,7 +5,7 @@ import logging
 
 from app.database import init_db
 from app.auth import verify_user
-from app.schemas import AddNoteRequest, SuccessResponse
+from app.schemas import AddNoteRequest, AddNoteResponse
 from app.modules.notes.addnote import add_note
 from app.constants import ERROR_INVALID_CREDENTIALS
 
@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["notes"])
 
-@router.post("/addnote", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
-def add_note_endpoint(request: AddNoteRequest) -> SuccessResponse:
+@router.post("/addnote", response_model=AddNoteResponse, status_code=status.HTTP_201_CREATED)
+def add_note_endpoint(request: AddNoteRequest) -> AddNoteResponse:
     """Add a new note."""
     try:
         init_db()
@@ -27,7 +27,7 @@ def add_note_endpoint(request: AddNoteRequest) -> SuccessResponse:
             )
 
         # Call the add_note function with all parameters from the request
-        add_note(
+        note_id = add_note(
             username=request.email,  # Use email as username for consistency
             password=request.password,
             title=request.title,
@@ -39,7 +39,11 @@ def add_note_endpoint(request: AddNoteRequest) -> SuccessResponse:
             column=request.column  # Add column parameter
         )
 
-        return SuccessResponse(message="Note added successfully")
+        return AddNoteResponse(
+            success=True,
+            message="Note added successfully",
+            note_id=note_id
+        )
         
     except HTTPException:
         # Re-raise HTTP exceptions (authentication, etc.)

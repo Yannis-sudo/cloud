@@ -162,7 +162,7 @@ def add_note_to_db(title: str, description: str, priority: str, author_name: str
 
 
 def add_note(username: str, password: str, title: str, description: str, 
-             priority: str, author_name: str, author_email: str, list_id: str, column: str = "todo"):
+             priority: str, author_name: str, author_email: str, list_id: str, column: str = "todo") -> str:
     """Add a new note to the system with permission checking using list_id.
     
     Args:
@@ -175,6 +175,9 @@ def add_note(username: str, password: str, title: str, description: str,
         author_email: The email address of the note author
         list_id: The ObjectId of the list to add the note to
         column: The column for the note (backlog, todo, in-progress, done)
+        
+    Returns:
+        str: The MongoDB ObjectId of the created note
         
     Raises:
         ValueError: If user doesn't have permission or list doesn't exist
@@ -196,7 +199,10 @@ def add_note(username: str, password: str, title: str, description: str,
         if result is None:
             raise Exception("Failed to add note to database")
         
-        logger.info(f"Note '{title}' successfully added to list ID '{list_id}' by {author_email}")
+        # Return the created note's ID
+        note_id = str(result.inserted_id)
+        logger.info(f"Note '{title}' successfully added to list ID '{list_id}' by {author_email} with ID {note_id}")
+        return note_id
         
     except ValueError:
         # Re-raise ValueError (permission issues, validation errors)
