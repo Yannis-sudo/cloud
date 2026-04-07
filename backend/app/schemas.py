@@ -443,3 +443,120 @@ class UpdateNoteColumnRequest(BaseModel):
                 "new_column": "in-progress"
             }
         }
+
+
+class UpdatePermissionsRequest(BaseModel):
+    """Request model for updating user permissions for a list."""
+
+    email: str  # The email for authentication
+    password: str  # The password for authentication
+    list_id: str  # The ID of the list
+    target_user_email: EmailStr  # The email of the user to update permissions for
+    permissions: dict  # Permission object with can_view, can_create, can_edit, can_delete
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "admin@example.com",
+                "password": "securepassword123",
+                "list_id": "507f1f77bcf86cd799439011",
+                "target_user_email": "user@example.com",
+                "permissions": {
+                    "can_view": True,
+                    "can_create": False,
+                    "can_edit": True,
+                    "can_delete": False
+                }
+            }
+        }
+
+
+class UpdatePermissionsResponse(BaseModel):
+    """Response model for updating user permissions."""
+
+    message: str
+    target_user_email: str
+    list_id: str
+    updated_permissions: dict
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "Permissions updated successfully",
+                "target_user_email": "user@example.com",
+                "list_id": "507f1f77bcf86cd799439011",
+                "updated_permissions": {
+                    "can_view": True,
+                    "can_create": False,
+                    "can_edit": True,
+                    "can_delete": False
+                }
+            }
+        }
+
+
+class GetPermissionsRequest(BaseModel):
+    """Request model for getting permissions for a list."""
+
+    email: str  # The email for authentication
+    password: str  # The password for authentication
+    list_id: str  # The ID of the list
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "admin@example.com",
+                "password": "securepassword123",
+                "list_id": "507f1f77bcf86cd799439011"
+            }
+        }
+
+
+class UserPermission(BaseModel):
+    """Model for user permission information."""
+
+    email: str
+    username: str
+    permissions: dict
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "user@example.com",
+                "username": "john_doe",
+                "permissions": {
+                    "can_view": True,
+                    "can_create": False,
+                    "can_edit": True,
+                    "can_delete": False
+                }
+            }
+        }
+
+
+class GetPermissionsResponse(BaseModel):
+    """Response model for getting permissions for a list."""
+
+    message: str
+    list_id: str
+    users: list[UserPermission]
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "Permissions retrieved successfully",
+                "list_id": "507f1f77bcf86cd799439011",
+                "users": [
+                    {
+                        "email": "user@example.com",
+                        "username": "john_doe",
+                        "permissions": {
+                            "can_view": True,
+                            "can_create": False,
+                            "can_edit": True,
+                            "can_delete": False
+                        }
+                    }
+                ]
+            }
+        }
