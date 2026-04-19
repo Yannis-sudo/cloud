@@ -12,7 +12,20 @@ class Settings:
     DATABASE_URL: str = os.getenv("DATABASE_URL", "mongodb://localhost:27017")
     DATABASE_NAME: str = os.getenv("DATABASE_NAME", "cloud")
     
-    # Security settings
+    # FastAPI Users & JWT settings
+    JWT_SECRET: str = os.getenv("JWT_SECRET", os.getenv("SECRET_KEY", "your-secret-key-change-in-production"))
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+    JWT_EXPIRATION_SECONDS: int = int(os.getenv("JWT_EXPIRATION_SECONDS", "1800"))  # 30 minutes
+    
+    # Email verification settings
+    EMAIL_VERIFICATION_ENABLED: bool = os.getenv("EMAIL_VERIFICATION_ENABLED", "false").lower() == "true"
+    ALLOW_UNVERIFIED_EMAIL_LOGIN: bool = os.getenv("ALLOW_UNVERIFIED_EMAIL_LOGIN", "true").lower() == "true"
+    
+    # OAuth settings (placeholder for future providers)
+    OAUTH_GOOGLE_CLIENT_ID: str = os.getenv("OAUTH_GOOGLE_CLIENT_ID", "")
+    OAUTH_GITHUB_CLIENT_ID: str = os.getenv("OAUTH_GITHUB_CLIENT_ID", "")
+    
+    # Legacy security settings (kept for backward compatibility)
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
@@ -20,11 +33,15 @@ class Settings:
     
     # CORS settings
     CORS_ORIGINS: List[str] = [
-        "http://localhost:5173",  # React dev 
+        "http://localhost:5173",  # React dev
         "http://10.168.6.136:5173",
+        "http://10.168.5.137:5173",
+        "http://10.168.5.137:8081",  # Expo web
         "http://localhost:3000",  # Alternative React port
         "http://127.0.0.1:5173",
+        "http://10.168.5.137:19000",  # Expo dev server
     ]
+    allow_all_origins: bool = os.getenv("ALLOW_ALL_ORIGINS", "true").lower() == "true"
     
     # File upload settings
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "10485760"))  # 10MB default

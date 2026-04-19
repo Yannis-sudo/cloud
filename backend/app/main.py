@@ -8,12 +8,14 @@ from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.database.connection import health_check, close_connection
+from app.database.async_db import init_db, close_db
 from app.core.exceptions import BaseCustomException
 from app.schemas.common import ErrorResponse
+from app.auth.models import User
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
@@ -27,10 +29,13 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up application...")
     
-    # Check database health
-    if not health_check():
-        logger.error("Database health check failed on startup")
-        raise Exception("Database connection failed")
+    try:
+        # Initialize Beanie with User model for FastAPI Users
+        await init_db([User])
+        logger.info("Beanie database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize Beanie: {e}")
+        raise Exception(f"Database initialization failed: {e}")
     
     logger.info("Application startup completed")
     
@@ -38,6 +43,7 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info("Shutting down application...")
+    await close_db()
     close_connection()
     logger.info("Application shutdown completed")
 
@@ -55,11 +61,24 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"] if settings.allow_all_origins else settings.CORS_ORIGINS,
+    allow_credentials=not settings.allow_all_origins,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
 )
+
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all requests and responses for debugging."""
+    logger.info(f"Incoming request: {request.method} {request.url.path}")
+    if request.method in ["POST", "PUT", "PATCH"]:
+        body = await request.body()
+        logger.info(f"Request body: {body.decode()}")
+    response = await call_next(request)
+    logger.info(f"Response status: {response.status_code}")
+    return response
 
 
 # Exception handlers
@@ -84,11 +103,11 @@ async def general_exception_handler(request: Request, exc: Exception):
     
     return JSONResponse(
         status_code=500,
-        content=ErrorResponse(
-            success=False,
-            message="Internal server error",
-            error_code="INTERNAL_SERVER_ERROR"
-        ).dict()
+        content={
+            "success": False,
+            "message": "Internal server error",
+            "error_code": "INTERNAL_SERVER_ERROR"
+        }
     )
 
 
@@ -132,11 +151,13 @@ async def health_check_endpoint():
 
 
 # Include API routers
-from app.api.v1 import auth, accounts, emails, notes, files, users, health
+from app.api.v1 import accounts, emails, notes, files, users, health
+from app.auth.routes import get_auth_router
 
-# API v1 endpoints
+# FastAPI Users authentication routers (replaces old auth router)
+auth_router = get_auth_router()
 app.include_router(
-    auth.router,
+    auth_router,
     prefix="/api/v1/auth",
     tags=["authentication"]
 )

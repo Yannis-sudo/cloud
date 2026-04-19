@@ -1,6 +1,6 @@
 """Authentication schemas for API requests and responses."""
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, ConfigDict, AliasChoices
 from typing import Optional
 from datetime import datetime
 
@@ -22,23 +22,31 @@ class LoginRequest(BaseModel):
 
 class RegisterRequest(BaseModel):
     """Request model for user registration."""
-    
-    username: str = Field(..., min_length=1, max_length=255, description="Username")
-    email: EmailStr = Field(..., description="Email address")
-    password: str = Field(..., min_length=6, max_length=128, description="Password")
-    first_name: Optional[str] = Field(None, max_length=255, description="First name")
-    last_name: Optional[str] = Field(None, max_length=255, description="Last name")
-    
-    class Config:
-        json_schema_extra = {
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
             "example": {
-                "username": "john_doe",
+                "name": "john_doe",
                 "email": "user@example.com",
                 "password": "securepassword123",
                 "first_name": "John",
                 "last_name": "Doe"
             }
-        }
+        },
+    )
+
+    username: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Username",
+        validation_alias=AliasChoices("name", "username"),
+    )
+    email: EmailStr = Field(..., description="Email address")
+    password: str = Field(..., min_length=6, max_length=128, description="Password")
+    first_name: Optional[str] = Field(None, max_length=255, description="First name")
+    last_name: Optional[str] = Field(None, max_length=255, description="Last name")
 
 
 class TokenResponse(BaseModel):
