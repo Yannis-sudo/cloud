@@ -86,6 +86,21 @@ class UserManager(BaseUserManager[User, PydanticObjectId]):
             request: Optional request object
         """
         logger.info(f"Email verified for user {user.email}")
+    
+    def parse_id(self, value: str | PydanticObjectId) -> PydanticObjectId:
+        """Parse a value into a PydanticObjectId.
+        
+        This is required for FastAPI Users JWT authentication with MongoDB.
+        
+        Args:
+            value: String ID or PydanticObjectId
+            
+        Returns:
+            PydanticObjectId: The parsed object ID
+        """
+        if isinstance(value, PydanticObjectId):
+            return value
+        return PydanticObjectId(value)
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):

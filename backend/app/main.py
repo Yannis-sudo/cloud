@@ -151,7 +151,7 @@ async def health_check_endpoint():
 
 
 # Include API routers
-from app.api.v1 import accounts, emails, notes, files, users, health
+from app.api.v1 import health
 from app.auth.routes import get_auth_router
 
 # FastAPI Users authentication routers (replaces old auth router)
@@ -160,36 +160,6 @@ app.include_router(
     auth_router,
     prefix="/api/v1/auth",
     tags=["authentication"]
-)
-
-app.include_router(
-    accounts.router,
-    prefix="/api/v1/accounts",
-    tags=["accounts"]
-)
-
-app.include_router(
-    emails.router,
-    prefix="/api/v1/emails",
-    tags=["emails"]
-)
-
-app.include_router(
-    notes.router,
-    prefix="/api/v1/notes",
-    tags=["notes"]
-)
-
-app.include_router(
-    files.router,
-    prefix="/api/v1/files",
-    tags=["files"]
-)
-
-app.include_router(
-    users.router,
-    prefix="/api/v1/users",
-    tags=["users"]
 )
 
 app.include_router(
