@@ -4,17 +4,17 @@ import logging
 from beanie import PydanticObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.config import get_settings
-from app.modules.ai_chats.models import UserAIModels, ModelCatalog
+from app.modules.ai_chats.models import UserAIModels, ModelCatalog, ModelInfo
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
-async def get_free_models() -> list[str]:
+async def get_free_models() -> list[ModelInfo]:
     """Get the list of free AI models from the model catalog.
     
     Returns:
-        list[str]: List of free model names
+        list[ModelInfo]: List of free model info
     """
     try:
         logger.info("[DEBUG] Querying model-catalog for free-models...")
@@ -32,7 +32,9 @@ async def get_free_models() -> list[str]:
         client.close()
         
         if catalog_raw:
-            models = catalog_raw.get("models", [])
+            models_data = catalog_raw.get("models", [])
+            # Convert raw data to ModelInfo objects
+            models = [ModelInfo(**m) if isinstance(m, dict) else ModelInfo(name=m, alias=m, description="") for m in models_data]
             logger.info(f"[DEBUG] Free models from raw query: {models}")
             return models
         
@@ -43,7 +45,7 @@ async def get_free_models() -> list[str]:
         return []
 
 
-async def ensure_user_has_models(user_id: str) -> list[str]:
+async def ensure_user_has_models(user_id: str) -> list[ModelInfo]:
     """Ensure user has AI models configured, auto-create from free models if not.
     Also adds any new free models to existing user entries.
     
@@ -51,7 +53,7 @@ async def ensure_user_has_models(user_id: str) -> list[str]:
         user_id: The user's ID
         
     Returns:
-        list[str]: List of available model names for the user
+        list[ModelInfo]: List of available model info for the user
     """
     try:
         user_object_id = PydanticObjectId(user_id)
@@ -67,16 +69,18 @@ async def ensure_user_has_models(user_id: str) -> list[str]:
         
         # User has an entry, check if we need to add new free models
         if free_models:
-            current_models = set(user_ai_models.models)
-            free_models_set = set(free_models)
+            current_model_names = {m.name for m in user_ai_models.models}
+            free_model_names = {m.name for m in free_models}
             
             # Add any free models that are not in the user's current list
-            missing_models = free_models_set - current_models
-            if missing_models:
+            missing_names = free_model_names - current_model_names
+            if missing_names:
                 # Add missing free models to user's list
-                user_ai_models.models.extend(missing_models)
+                for model in free_models:
+                    if model.name in missing_names:
+                        user_ai_models.models.append(model)
                 await user_ai_models.save()
-                logger.info(f"[DEBUG] Added missing free models {missing_models} to user {user_id}")
+                logger.info(f"[DEBUG] Added missing free models {missing_names} to user {user_id}")
         
         logger.info(f"[DEBUG] Returning models for user {user_id}: {user_ai_models.models}")
         return user_ai_models.models
@@ -101,19 +105,19 @@ async def check_model_permission(user_id: str, model_name: str) -> bool:
         user_models = await ensure_user_has_models(user_id)
         
         # Then check if the requested model is in the user's list
-        return model_name in user_models
+        return any(m.name == model_name for m in user_models)
     except Exception:
         # Invalid user ID or other error
         return False
 
 
-async def get_user_available_models(user_id: str) -> list[str]:
+async def get_user_available_models(user_id: str) -> list[ModelInfo]:
     """Get the list of AI models available for a user.
     
     Args:
         user_id: The user's ID
         
     Returns:
-        list[str]: List of available model names
+        list[ModelInfo]: List of available model info
     """
     return await ensure_user_has_models(user_id)

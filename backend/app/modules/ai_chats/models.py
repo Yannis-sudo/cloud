@@ -1,9 +1,17 @@
 """AI models document for MongoDB with Beanie."""
 
-from typing import List
+from typing import List, Optional
 from beanie import Document, PydanticObjectId
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymongo.collation import Collation
+
+
+class ModelInfo(BaseModel):
+    """Model information with alias and description."""
+    
+    name: str = Field(..., description="Model name/ID")
+    alias: str = Field(..., description="Display alias for the model")
+    description: str = Field(default="", description="Model description")
 
 
 class ModelCatalog(Document):
@@ -13,7 +21,7 @@ class ModelCatalog(Document):
     """
     
     type: str = Field(..., description="Type of models (e.g., 'free-models', 'paid-models')")
-    models: List[str] = Field(default_factory=list, description="List of AI model names")
+    models: List[ModelInfo] = Field(default_factory=list, description="List of AI model info")
     
     class Settings:
         """Beanie document settings."""
@@ -30,7 +38,7 @@ class UserAIModels(Document):
     """
     
     user_id: PydanticObjectId = Field(..., description="User ID reference")
-    models: List[str] = Field(default_factory=list, description="List of allowed AI model names")
+    models: List[ModelInfo] = Field(default_factory=list, description="List of allowed AI model info")
     
     class Settings:
         """Beanie document settings."""

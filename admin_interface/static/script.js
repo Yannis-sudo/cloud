@@ -14,21 +14,31 @@ async function fetchModels() {
 }
 
 async function addModel() {
-    const input = document.getElementById('modelInput');
-    const modelName = input.value.trim();
+    const nameInput = document.getElementById('modelName');
+    const aliasInput = document.getElementById('modelAlias');
+    const descInput = document.getElementById('modelDescription');
     
-    if (!modelName) {
-        showMessage('Please enter a model name', 'error');
+    const modelName = nameInput.value.trim();
+    const modelAlias = aliasInput.value.trim();
+    const modelDescription = descInput.value.trim();
+    
+    if (!modelName || !modelAlias) {
+        showMessage('Please enter model name and alias', 'error');
         return;
     }
     
     try {
+        console.log('[DEBUG] Adding model:', { name: modelName, alias: modelAlias, description: modelDescription });
         const response = await fetch(`${API_BASE}/free-models`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ model_name: modelName }),
+            body: JSON.stringify({ 
+                name: modelName,
+                alias: modelAlias,
+                description: modelDescription
+            }),
         });
         
         if (!response.ok) {
@@ -37,10 +47,14 @@ async function addModel() {
         }
         
         const data = await response.json();
-        input.value = '';
+        console.log('[DEBUG] Model added successfully:', data);
+        nameInput.value = '';
+        aliasInput.value = '';
+        descInput.value = '';
         renderModels(data.models);
         showMessage('Model added successfully', 'success');
     } catch (error) {
+        console.error('[DEBUG] Error adding model:', error);
         showMessage(error.message, 'error');
     }
 }
@@ -74,8 +88,12 @@ function renderModels(models) {
     
     container.innerHTML = models.map(model => `
         <div class="model-item">
-            <span class="model-name">${escapeHtml(model)}</span>
-            <button class="delete-btn" onclick="removeModel('${escapeHtml(model)}')">Remove</button>
+            <div class="model-details">
+                <span class="model-name">${escapeHtml(model.alias || model.name)}</span>
+                <span class="model-id">${escapeHtml(model.name)}</span>
+                ${model.description ? `<span class="model-description">${escapeHtml(model.description)}</span>` : ''}
+            </div>
+            <button class="delete-btn" onclick="removeModel('${escapeHtml(model.name)}')">Remove</button>
         </div>
     `).join('');
 }

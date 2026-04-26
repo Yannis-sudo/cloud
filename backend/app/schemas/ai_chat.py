@@ -1,6 +1,15 @@
 """Schemas for AI chat message endpoints."""
 
 from pydantic import BaseModel, Field
+from typing import List
+
+
+class ModelInfo(BaseModel):
+    """Model information with alias and description."""
+    
+    name: str = Field(..., description="Model name/ID")
+    alias: str = Field(..., description="Display alias for the model")
+    description: str = Field(default="", description="Model description")
 
 
 class ChatMessageRequest(BaseModel):
@@ -20,4 +29,4 @@ class ChatMessageResponse(BaseModel):
 class AvailableModelsResponse(BaseModel):
     """Response schema for available models."""
     
-    models: list[str] = Field(..., description="List of available AI model names for the user")
+    models: List[ModelInfo] = Field(..., description="List of available AI model info for the user")

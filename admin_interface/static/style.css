@@ -41,10 +41,12 @@ h2 {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
-#modelInput {
+#modelName, #modelAlias, #modelDescription {
     flex: 1;
+    min-width: 150px;
     padding: 12px 16px;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
@@ -52,9 +54,13 @@ h2 {
     transition: border-color 0.3s;
 }
 
-#modelInput:focus {
+#modelName:focus, #modelAlias:focus, #modelDescription:focus {
     outline: none;
     border-color: #667eea;
+}
+
+#modelDescription {
+    flex: 2;
 }
 
 button {
@@ -94,9 +100,29 @@ button:active {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.model-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
 .model-name {
     font-size: 16px;
+    font-weight: 600;
     color: #333;
+}
+
+.model-id {
+    font-size: 12px;
+    color: #999;
+    font-family: monospace;
+}
+
+.model-description {
+    font-size: 13px;
+    color: #666;
+    font-style: italic;
 }
 
 .delete-btn {
