@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Models Admin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Models Admin</h1>
+        
+        <div class="section">
+            <h2>Free Models</h2>
+            <div class="add-model">
+                <input type="text" id="modelInput" placeholder="Enter model name (e.g., gpt-3.5-turbo)">
+                <button onclick="addModel()">Add Model</button>
+            </div>
+            
+            <div class="models-list" id="modelsList">
+                <p>Loading models...</p>
+            </div>
+        </div>
+        
+        <div class="message" id="message"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

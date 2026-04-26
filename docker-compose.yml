@@ -12,6 +12,19 @@ services:
     depends_on:
       - mongodb
 
+  admin_interface:
+    build: ./admin_interface
+    ports:
+      - "6769:6769"
+    volumes:
+      - ./admin_interface:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=mongodb://mongodb:27017
+      - DATABASE_NAME=copilot
+    depends_on:
+      - mongodb
+
   mongodb:
     image: mongo:7.0
     ports:

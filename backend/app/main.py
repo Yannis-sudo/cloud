@@ -12,7 +12,7 @@ from app.database.async_db import init_db, close_db
 from app.core.exceptions import BaseCustomException
 from app.schemas.common import ErrorResponse
 from app.auth.models import User
-from app.modules.ai_chats.models import UserAIModels
+from app.modules.ai_chats.models import UserAIModels, ModelCatalog
 
 # Configure logging
 logging.basicConfig(
@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
     
     try:
         # Initialize Beanie with User model for FastAPI Users and AI models
-        await init_db([User, UserAIModels])
+        await init_db([User, UserAIModels, ModelCatalog])
         logger.info("Beanie database initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize Beanie: {e}")
@@ -151,6 +151,7 @@ async def health_check_endpoint():
 # Include API routers
 from app.api.v1 import health
 from app.api.v1 import ai_chat
+from app.api.v1 import model_admin
 from app.auth.routes import get_auth_router
 
 # FastAPI Users authentication routers (replaces old auth router)
@@ -171,6 +172,12 @@ app.include_router(
     ai_chat.router,
     prefix="/api/v1",
     tags=["ai-chat"]
+)
+
+app.include_router(
+    model_admin.router,
+    prefix="/api/v1",
+    tags=["model-admin"]
 )
 
 
