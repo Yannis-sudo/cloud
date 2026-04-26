@@ -35,12 +35,10 @@ async def ensure_user_has_models(user_id: str) -> list[str]:
         free_models = await get_free_models()
         
         if not user_ai_models:
-            # User has no AI models configured, create from free models
-            if free_models:
-                user_ai_models = UserAIModels(user_id=user_object_id, models=free_models)
-                await user_ai_models.insert()
-                return free_models
-            return []
+            # User has no AI models configured, create entry with free models (or empty list)
+            user_ai_models = UserAIModels(user_id=user_object_id, models=free_models if free_models else [])
+            await user_ai_models.insert()
+            return user_ai_models.models
         
         # User has an entry, check if we need to add new free models
         if free_models:
