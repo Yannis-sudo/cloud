@@ -15,3 +15,9 @@ class ChatMessageResponse(BaseModel):
     
     model_name: str = Field(..., description="Name of the AI model used")
     text: str = Field(..., description="The response text from the AI model")
+
+
+class AvailableModelsResponse(BaseModel):
+    """Response schema for available models."""
+    
+    models: list[str] = Field(..., description="List of available AI model names for the user")
