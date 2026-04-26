@@ -2,9 +2,12 @@
 
 import logging
 from beanie import PydanticObjectId
+from motor.motor_asyncio import AsyncIOMotorClient
+from app.config import get_settings
 from app.modules.ai_chats.models import UserAIModels, ModelCatalog
 
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 
 async def get_free_models() -> list[str]:
@@ -14,14 +17,29 @@ async def get_free_models() -> list[str]:
         list[str]: List of free model names
     """
     try:
+        logger.info("[DEBUG] Querying model-catalog for free-models...")
         catalog = await ModelCatalog.find_one(ModelCatalog.type == "free-models")
+        logger.info(f"[DEBUG] Query result: {catalog}")
         if catalog:
             logger.info(f"[DEBUG] Free models loaded from catalog: {catalog.models}")
             return catalog.models
-        logger.info("[DEBUG] No free-models entry found in catalog")
+        logger.info("[DEBUG] No free-models entry found in catalog, trying raw MongoDB query...")
+        
+        # Fallback to raw MongoDB query
+        client = AsyncIOMotorClient(settings.DATABASE_URL)
+        db = client[settings.DATABASE_NAME]
+        catalog_raw = await db["model-catalog"].find_one({"type": "free-models"})
+        client.close()
+        
+        if catalog_raw:
+            models = catalog_raw.get("models", [])
+            logger.info(f"[DEBUG] Free models from raw query: {models}")
+            return models
+        
+        logger.info("[DEBUG] No free-models entry found in catalog (raw query also failed)")
         return []
     except Exception as e:
-        logger.error(f"[DEBUG] Error fetching free models: {e}")
+        logger.error(f"[DEBUG] Error fetching free models: {e}", exc_info=True)
         return []
 
 
