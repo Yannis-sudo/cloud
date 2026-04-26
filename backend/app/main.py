@@ -150,7 +150,7 @@ async def health_check_endpoint():
 
 # Include API routers
 from app.api.v1 import health
-from app.api.v1 import ai_chat_message
+from app.api.v1 import ai_chat
 from app.auth.routes import get_auth_router
 
 # FastAPI Users authentication routers (replaces old auth router)
@@ -168,7 +168,7 @@ app.include_router(
 )
 
 app.include_router(
-    ai_chat_message.router,
+    ai_chat.router,
     prefix="/api/v1",
     tags=["ai-chat"]
 )
