@@ -19,7 +19,7 @@ router = APIRouter()
 )
 async def ai_chat_message(
     request: ChatMessageRequest,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user())
 ):
     """AI chat message endpoint.
     
@@ -55,7 +55,7 @@ async def ai_chat_message(
     description="Get the list of AI models available for the current user"
 )
 async def get_available_models(
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user())
 ):
     """Get available AI models for the current user.
     

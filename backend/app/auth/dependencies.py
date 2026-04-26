@@ -1,6 +1,6 @@
 """Dependencies for route protection and user injection."""
 
-from typing import Optional
+from typing import Optional, Callable
 from fastapi import Depends
 from fastapi_users import FastAPIUsers
 from app.auth.models import User
@@ -20,11 +20,11 @@ def set_fastapi_users(fastapi_users: FastAPIUsers) -> None:
     _fastapi_users = fastapi_users
 
 
-def get_current_user() -> FastAPIUsers:
+def get_current_user() -> Callable:
     """Get current authenticated user (may be inactive).
     
     Returns:
-        User: Current user object
+        Callable: Dependency that returns User object
         
     Raises:
         HTTPException 401: If not authenticated
@@ -34,11 +34,11 @@ def get_current_user() -> FastAPIUsers:
     return _fastapi_users.current_user()
 
 
-def get_current_active_user() -> FastAPIUsers:
+def get_current_active_user() -> Callable:
     """Get current active authenticated user.
     
     Returns:
-        User: Current active user object
+        Callable: Dependency that returns User object
         
     Raises:
         HTTPException 401: If not authenticated
@@ -49,11 +49,11 @@ def get_current_active_user() -> FastAPIUsers:
     return _fastapi_users.current_user(active=True)
 
 
-def get_current_superuser() -> FastAPIUsers:
+def get_current_superuser() -> Callable:
     """Get current authenticated superuser.
     
     Returns:
-        User: Current superuser object
+        Callable: Dependency that returns User object
         
     Raises:
         HTTPException 401: If not authenticated
@@ -64,11 +64,11 @@ def get_current_superuser() -> FastAPIUsers:
     return _fastapi_users.current_user(superuser=True)
 
 
-def get_optional_current_user() -> Optional[FastAPIUsers]:
+def get_optional_current_user() -> Callable:
     """Get current user if authenticated, otherwise None.
     
     Returns:
-        Optional[User]: Current user or None
+        Callable: Dependency that returns Optional[User]
     """
     if _fastapi_users is None:
         raise RuntimeError("FastAPIUsers not initialized")
