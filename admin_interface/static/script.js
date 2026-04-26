@@ -2,11 +2,13 @@ const API_BASE = '/api';
 
 async function fetchModels() {
     try {
+        console.log('[DEBUG] Fetching free models from API...');
         const response = await fetch(`${API_BASE}/free-models`);
         const data = await response.json();
+        console.log('[DEBUG] Free models received:', data.models);
         return data.models;
     } catch (error) {
-        console.error('Error fetching models:', error);
+        console.error('[DEBUG] Error fetching models:', error);
         return [];
     }
 }

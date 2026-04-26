@@ -1,7 +1,10 @@
 """AI chat message module functions."""
 
+import logging
 from beanie import PydanticObjectId
 from app.modules.ai_chats.models import UserAIModels, ModelCatalog
+
+logger = logging.getLogger(__name__)
 
 
 async def get_free_models() -> list[str]:
@@ -13,9 +16,12 @@ async def get_free_models() -> list[str]:
     try:
         catalog = await ModelCatalog.find_one(ModelCatalog.type == "free-models")
         if catalog:
+            logger.info(f"[DEBUG] Free models loaded from catalog: {catalog.models}")
             return catalog.models
+        logger.info("[DEBUG] No free-models entry found in catalog")
         return []
-    except Exception:
+    except Exception as e:
+        logger.error(f"[DEBUG] Error fetching free models: {e}")
         return []
 
 
@@ -38,6 +44,7 @@ async def ensure_user_has_models(user_id: str) -> list[str]:
             # User has no AI models configured, create entry with free models (or empty list)
             user_ai_models = UserAIModels(user_id=user_object_id, models=free_models if free_models else [])
             await user_ai_models.insert()
+            logger.info(f"[DEBUG] Created new user entry for user {user_id} with models: {user_ai_models.models}")
             return user_ai_models.models
         
         # User has an entry, check if we need to add new free models
@@ -51,9 +58,12 @@ async def ensure_user_has_models(user_id: str) -> list[str]:
                 # Add missing free models to user's list
                 user_ai_models.models.extend(missing_models)
                 await user_ai_models.save()
+                logger.info(f"[DEBUG] Added missing free models {missing_models} to user {user_id}")
         
+        logger.info(f"[DEBUG] Returning models for user {user_id}: {user_ai_models.models}")
         return user_ai_models.models
-    except Exception:
+    except Exception as e:
+        logger.error(f"[DEBUG] Error ensuring user has models: {e}")
         return []
 
 

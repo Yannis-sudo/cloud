@@ -1,6 +1,7 @@
 """Admin interface for managing AI models."""
 
 import os
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL", "mongodb://mongodb:27017")
@@ -89,25 +93,31 @@ async def get_free_models():
     catalog = await collection.find_one({"type": "free-models"})
     
     if not catalog:
+        logger.info("[DEBUG] No free-models entry found in catalog")
         return FreeModelsResponse(models=[])
     
-    return FreeModelsResponse(models=catalog.get("models", []))
+    models = catalog.get("models", [])
+    logger.info(f"[DEBUG] Free models from catalog: {models}")
+    return FreeModelsResponse(models=models)
 
 
 @app.post("/api/free-models", response_model=FreeModelsResponse)
 async def add_free_model(request: AddModelRequest):
     """Add a model to free models."""
+    logger.info(f"[DEBUG] Adding model to free models: {request.model_name}")
     collection = await get_catalog_collection()
     catalog = await collection.find_one({"type": "free-models"})
     
     if not catalog:
         # Create new entry
         await collection.insert_one({"type": "free-models", "models": [request.model_name]})
+        logger.info(f"[DEBUG] Created new free-models entry with: {request.model_name}")
         return FreeModelsResponse(models=[request.model_name])
     
     models = catalog.get("models", [])
     if request.model_name in models:
         from fastapi import HTTPException
+        logger.warning(f"[DEBUG] Model {request.model_name} already exists in free models")
         raise HTTPException(status_code=400, detail="Model already exists")
     
     models.append(request.model_name)
@@ -115,23 +125,26 @@ async def add_free_model(request: AddModelRequest):
         {"type": "free-models"},
         {"$set": {"models": models}}
     )
-    
+    logger.info(f"[DEBUG] Added model {request.model_name} to free models. New list: {models}")
     return FreeModelsResponse(models=models)
 
 
 @app.delete("/api/free-models/{model_name}", response_model=FreeModelsResponse)
 async def remove_free_model(model_name: str):
     """Remove a model from free models."""
+    logger.info(f"[DEBUG] Removing model from free models: {model_name}")
     collection = await get_catalog_collection()
     catalog = await collection.find_one({"type": "free-models"})
     
     if not catalog:
         from fastapi import HTTPException
+        logger.warning("[DEBUG] Free models catalog not found")
         raise HTTPException(status_code=404, detail="Free models catalog not found")
     
     models = catalog.get("models", [])
     if model_name not in models:
         from fastapi import HTTPException
+        logger.warning(f"[DEBUG] Model {model_name} not found in free models")
         raise HTTPException(status_code=404, detail="Model not found")
     
     models.remove(model_name)
@@ -139,7 +152,7 @@ async def remove_free_model(model_name: str):
         {"type": "free-models"},
         {"$set": {"models": models}}
     )
-    
+    logger.info(f"[DEBUG] Removed model {model_name} from free models. New list: {models}")
     return FreeModelsResponse(models=models)
 
 

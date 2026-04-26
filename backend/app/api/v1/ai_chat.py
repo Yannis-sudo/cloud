@@ -1,5 +1,6 @@
 """AI chat message API endpoints."""
 
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth.dependencies import get_current_active_user
@@ -8,6 +9,7 @@ from app.schemas.ai_chat import ChatMessageRequest, ChatMessageResponse, Availab
 from app.modules.ai_chats.ai_chat_message import check_model_permission, get_user_available_models
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post(
@@ -66,4 +68,5 @@ async def get_available_models(
         AvailableModelsResponse: List of available model names
     """
     models = await get_user_available_models(str(current_user.id))
+    logger.info(f"[DEBUG] Returning available models for user {current_user.id}: {models}")
     return AvailableModelsResponse(models=models)
