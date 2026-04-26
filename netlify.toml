@@ -1,0 +1,12 @@
+[build]
+  base = "backend"
+  publish = "static"
+  command = "pip install -r requirements.txt"
+
+[build.environment]
+  PYTHON_VERSION = "3.12"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/app"
+  status = 200
