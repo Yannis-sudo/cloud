@@ -4,7 +4,8 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
 
@@ -52,6 +53,9 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 class FreeModelsResponse(BaseModel):
     """Response schema for free models."""
@@ -74,6 +78,7 @@ async def get_catalog_collection():
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the admin interface HTML."""
+    from fastapi.responses import FileResponse
     return FileResponse("static/index.html")
 
 
