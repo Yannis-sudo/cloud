@@ -15,7 +15,7 @@ from app.auth.models import User
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
@@ -73,9 +73,6 @@ app.add_middleware(
 async def log_requests(request: Request, call_next):
     """Log all requests and responses for debugging."""
     logger.info(f"Incoming request: {request.method} {request.url.path}")
-    if request.method in ["POST", "PUT", "PATCH"]:
-        body = await request.body()
-        logger.info(f"Request body: {body.decode()}")
     response = await call_next(request)
     logger.info(f"Response status: {response.status_code}")
     return response

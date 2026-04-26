@@ -41,7 +41,7 @@ class Settings:
         "http://127.0.0.1:5173",
         "http://10.168.5.137:19000",  # Expo dev server
     ]
-    allow_all_origins: bool = os.getenv("ALLOW_ALL_ORIGINS", "true").lower() == "true"
+    allow_all_origins: bool = os.getenv("ALLOW_ALL_ORIGINS", "false").lower() == "true"
     
     # File upload settings
     MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "10485760"))  # 10MB default
