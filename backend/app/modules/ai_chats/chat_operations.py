@@ -4,7 +4,8 @@ import logging
 from beanie import PydanticObjectId
 from datetime import datetime
 from app.modules.ai_chats.models import AIChat, ChatMessage
-from app.modules.ai_chats.ai_chat_message import check_model_permission
+from app.modules.ai_chats.ai_chat_message import check_model_permission, get_free_models
+from app.modules.ai_chats.free_chat_open_router import send_to_openrouter
 
 logger = logging.getLogger(__name__)
 
@@ -110,18 +111,41 @@ async def send_message(user_id: str, chat_id: str, message: str, model_name: str
 async def get_ai_response(message: str, model_name: str) -> str:
     """Get AI response for a message.
     
-    This is a placeholder function that will be implemented later
-    to actually call AI models.
+    Checks if the model is in the free models list and calls OpenRouter API.
     
     Args:
         message: The user's message
-        model_name: The AI model to use
+        model_name: The AI model to use (real model name, not alias)
         
     Returns:
         str: The AI's response
+        
+    Raises:
+        ValueError: If model is not available in free models
+        Exception: If API call fails
     """
-    # TODO: Implement actual AI model integration
-    return "How can i help you"
+    try:
+        # Get list of free models
+        free_models = await get_free_models()
+        
+        # Check if the requested model is in the free models list
+        is_free_model = any(model.name == model_name for model in free_models)
+        
+        if not is_free_model:
+            logger.warning("Model %s is not available in free models", model_name)
+            raise ValueError(f"Model '{model_name}' is not available in free models")
+        
+        # Call OpenRouter API
+        logger.info("Calling OpenRouter API for model %s", model_name)
+        response = await send_to_openrouter(message, model_name)
+        
+        return response
+        
+    except ValueError:
+        raise
+    except Exception as e:
+        logger.error("Error getting AI response for model %s: %s", model_name, e)
+        raise
 
 
 async def get_user_chats(user_id: str) -> list:

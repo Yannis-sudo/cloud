@@ -109,7 +109,7 @@ async def send_chat_message(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error("Error sending message for user %s: %s", current_user.id, e)
-        raise HTTPException(status_code=500, detail="Failed to send message")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get(
