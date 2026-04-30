@@ -1,6 +1,7 @@
 """AI models document for MongoDB with Beanie."""
 
 from typing import List, Optional, Union
+from datetime import datetime
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field, field_validator
 from pymongo.collation import Collation
@@ -56,4 +57,33 @@ class UserAIModels(Document):
         collection = "ai-models"
         indexes = [
             "user_id",  # Index on user_id for quick lookups
+        ]
+
+
+class ChatMessage(BaseModel):
+    """Chat message model."""
+    
+    role: str = Field(..., description="Message role: 'user' or 'assistant'")
+    content: str = Field(..., description="Message content")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Message timestamp")
+
+
+class AIChat(Document):
+    """AI chat document.
+    
+    Stores chat conversations between users and AI models.
+    """
+    
+    user_id: PydanticObjectId = Field(..., description="User ID reference")
+    title: str = Field(default="New Chat", description="Chat title")
+    messages: List[ChatMessage] = Field(default_factory=list, description="List of chat messages")
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Chat creation timestamp")
+    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Chat last update timestamp")
+    
+    class Settings:
+        """Beanie document settings."""
+        collection = "ai-chats"
+        indexes = [
+            "user_id",  # Index on user_id for efficient queries with many chats
+            [("user_id", 1), ("updated_at", -1)],  # Compound index for user chats sorted by update time
         ]

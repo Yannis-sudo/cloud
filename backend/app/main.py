@@ -12,7 +12,7 @@ from app.database.async_db import init_db, close_db
 from app.core.exceptions import BaseCustomException
 from app.schemas.common import ErrorResponse
 from app.auth.models import User
-from app.modules.ai_chats.models import UserAIModels, ModelCatalog
+from app.modules.ai_chats.models import UserAIModels, ModelCatalog, AIChat
 
 # Configure logging
 logging.basicConfig(
@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
     
     try:
         # Initialize Beanie with User model for FastAPI Users and AI models
-        await init_db([User, UserAIModels, ModelCatalog])
+        await init_db([User, UserAIModels, ModelCatalog, AIChat])
         logger.info("Beanie database initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize Beanie: {e}")
