@@ -60,7 +60,8 @@ class Settings:
     
     # AI API settings
     OPENROUTER_COPILOT_AI_CHAT_KEY_FREE: str = os.getenv("OPENROUTER_COPILOT_AI_CHAT_KEY_FREE", "")
-    
+    print(OPENROUTER_COPILOT_AI_CHAT_KEY_FREE)
+
     # Logging settings
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     
