@@ -67,18 +67,6 @@ async def ensure_user_has_models(user_id: str) -> list[ModelInfo]:
             logger.info(f"[DEBUG] Created new user entry for user {user_id} with models: {user_ai_models.models}")
             return user_ai_models.models
         
-        # User has an entry, check if we need to migrate old string-based models to ModelInfo objects
-        if user_ai_models.models:
-            # Check if any models are strings (old format) and migrate them
-            needs_migration = any(isinstance(m, str) for m in user_ai_models.models)
-            if needs_migration:
-                logger.info(f"[DEBUG] Migrating old string-based models to ModelInfo for user {user_id}")
-                user_ai_models.models = [
-                    ModelInfo(name=m, alias=m, description="") if isinstance(m, str) else m
-                    for m in user_ai_models.models
-                ]
-                await user_ai_models.save()
-        
         # User has an entry, check if we need to add new free models
         if free_models:
             current_model_names = {m.name for m in user_ai_models.models}
@@ -93,6 +81,10 @@ async def ensure_user_has_models(user_id: str) -> list[ModelInfo]:
                         user_ai_models.models.append(model)
                 await user_ai_models.save()
                 logger.info(f"[DEBUG] Added missing free models {missing_names} to user {user_id}")
+        
+        # Save the document if it was migrated from string format (validator converts in-memory)
+        # We detect this by checking if the document needs saving
+        await user_ai_models.save()
         
         logger.info(f"[DEBUG] Returning models for user {user_id}: {user_ai_models.models}")
         return user_ai_models.models

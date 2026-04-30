@@ -1,8 +1,8 @@
 """AI models document for MongoDB with Beanie."""
 
-from typing import List, Optional
+from typing import List, Optional, Union
 from beanie import Document, PydanticObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pymongo.collation import Collation
 
 
@@ -39,6 +39,17 @@ class UserAIModels(Document):
     
     user_id: PydanticObjectId = Field(..., description="User ID reference")
     models: List[ModelInfo] = Field(default_factory=list, description="List of allowed AI model info")
+    
+    @field_validator('models', mode='before')
+    @classmethod
+    def migrate_string_models(cls, v):
+        """Migrate old string-based models to ModelInfo objects."""
+        if isinstance(v, list):
+            return [
+                ModelInfo(name=m, alias=m, description="") if isinstance(m, str) else m
+                for m in v
+            ]
+        return v
     
     class Settings:
         """Beanie document settings."""
