@@ -121,9 +121,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderModels(models);
 });
 
-// Allow adding model with Enter key
-document.getElementById('modelInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        addModel();
-    }
+// Allow adding model with Enter key on any input field
+document.addEventListener('DOMContentLoaded', () => {
+    const inputs = ['modelName', 'modelAlias', 'modelDescription'];
+    inputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addModel();
+                }
+            });
+        }
+    });
 });
