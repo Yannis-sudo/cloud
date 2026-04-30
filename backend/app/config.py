@@ -36,8 +36,10 @@ if env_config is None and ENV_FILE.exists():
 
 def get_env(name: str, default: str = "") -> str:
     """Read configuration from process env first, then backend/.env."""
-    if name in os.environ:
-        return os.environ[name]
+    value = os.environ.get(name)
+
+    if value:
+        return value
 
     if env_config is None:
         return file_env.get(name, default)
