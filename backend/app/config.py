@@ -58,6 +58,9 @@ class Settings:
     IMAP_TIMEOUT: int = int(os.getenv("IMAP_TIMEOUT", "30"))
     SMTP_TIMEOUT: int = int(os.getenv("SMTP_TIMEOUT", "30"))
     
+    # AI API settings
+    OPENROUTER_COPILOT_AI_CHAT_KEY_FREE: str = os.getenv("OPENROUTER_COPILOT_AI_CHAT_KEY_FREE", "")
+    
     # Logging settings
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     

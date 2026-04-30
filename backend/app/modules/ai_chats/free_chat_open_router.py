@@ -23,8 +23,7 @@ async def send_to_openrouter(message: str, model_name: str) -> str:
         httpx.HTTPError: If the API request fails
         Exception: For other errors
     """
-    api_key = getattr(settings, 'OPENROUTER_COPILOT_AI_CHAT_KEY_FREE', None)
-    print(api_key)
+    api_key = settings.OPENROUTER_COPILOT_AI_CHAT_KEY_FREE
 
     if not api_key:
         logger.error("OpenRouter API key not configured")
