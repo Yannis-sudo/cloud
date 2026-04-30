@@ -69,4 +69,6 @@ async def get_available_models(
     """
     models = await get_user_available_models(str(current_user.id))
     logger.info(f"[DEBUG] Returning available models for user {current_user.id}: {models}")
-    return AvailableModelsResponse(models=models)
+    # Convert ModelInfo objects to dictionaries for response serialization
+    models_dict = [m.model_dump() if hasattr(m, 'model_dump') else m.dict() for m in models]
+    return AvailableModelsResponse(models=models_dict)

@@ -67,6 +67,10 @@ async def ensure_user_has_models(user_id: str) -> list[ModelInfo]:
             logger.info(f"[DEBUG] Created new user entry for user {user_id} with models: {user_ai_models.models}")
             return user_ai_models.models
         
+        # User has an entry - the validator may have migrated string-based models to ModelInfo
+        # Save the document to persist any migration that occurred
+        await user_ai_models.save()
+        
         # User has an entry, check if we need to add new free models
         if free_models:
             current_model_names = {m.name for m in user_ai_models.models}
@@ -81,10 +85,6 @@ async def ensure_user_has_models(user_id: str) -> list[ModelInfo]:
                         user_ai_models.models.append(model)
                 await user_ai_models.save()
                 logger.info(f"[DEBUG] Added missing free models {missing_names} to user {user_id}")
-        
-        # Save the document if it was migrated from string format (validator converts in-memory)
-        # We detect this by checking if the document needs saving
-        await user_ai_models.save()
         
         logger.info(f"[DEBUG] Returning models for user {user_id}: {user_ai_models.models}")
         return user_ai_models.models

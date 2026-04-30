@@ -2,14 +2,7 @@
 
 from pydantic import BaseModel, Field
 from typing import List
-
-
-class ModelInfo(BaseModel):
-    """Model information with alias and description."""
-    
-    name: str = Field(..., description="Model name/ID")
-    alias: str = Field(..., description="Display alias for the model")
-    description: str = Field(default="", description="Model description")
+from app.modules.ai_chats.models import ModelInfo
 
 
 class ChatMessageRequest(BaseModel):
