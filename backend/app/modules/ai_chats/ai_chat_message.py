@@ -17,13 +17,9 @@ async def get_free_models() -> list[ModelInfo]:
         list[ModelInfo]: List of free model info
     """
     try:
-        logger.info("[DEBUG] Querying model-catalog for free-models...")
         catalog = await ModelCatalog.find_one(ModelCatalog.type == "free-models")
-        logger.info(f"[DEBUG] Query result: {catalog}")
         if catalog:
-            logger.info(f"[DEBUG] Free models loaded from catalog: {catalog.models}")
             return catalog.models
-        logger.info("[DEBUG] No free-models entry found in catalog, trying raw MongoDB query...")
         
         # Fallback to raw MongoDB query
         client = AsyncIOMotorClient(settings.DATABASE_URL)
@@ -34,14 +30,16 @@ async def get_free_models() -> list[ModelInfo]:
         if catalog_raw:
             models_data = catalog_raw.get("models", [])
             # Convert raw data to ModelInfo objects
-            models = [ModelInfo(**m) if isinstance(m, dict) else ModelInfo(name=m, alias=m, description="") for m in models_data]
-            logger.info(f"[DEBUG] Free models from raw query: {models}")
+            models = [
+                ModelInfo(**m) if isinstance(m, dict) 
+                else ModelInfo(name=m, alias=m, description="") 
+                for m in models_data
+            ]
             return models
         
-        logger.info("[DEBUG] No free-models entry found in catalog (raw query also failed)")
         return []
     except Exception as e:
-        logger.error(f"[DEBUG] Error fetching free models: {e}", exc_info=True)
+        logger.error("Error fetching free models: %s", e)
         return []
 
 
@@ -61,35 +59,34 @@ async def ensure_user_has_models(user_id: str) -> list[ModelInfo]:
         free_models = await get_free_models()
         
         if not user_ai_models:
-            # User has no AI models configured, create entry with free models (or empty list)
-            user_ai_models = UserAIModels(user_id=user_object_id, models=free_models if free_models else [])
+            # User has no AI models configured, create entry with free models
+            user_ai_models = UserAIModels(
+                user_id=user_object_id, 
+                models=free_models if free_models else []
+            )
             await user_ai_models.insert()
-            logger.info(f"[DEBUG] Created new user entry for user {user_id} with models: {user_ai_models.models}")
+            logger.info("Created new user AI models entry for user %s", user_id)
             return user_ai_models.models
         
-        # User has an entry - the validator may have migrated string-based models to ModelInfo
         # Save the document to persist any migration that occurred
         await user_ai_models.save()
         
-        # User has an entry, check if we need to add new free models
+        # Add any free models that are not in the user's current list
         if free_models:
             current_model_names = {m.name for m in user_ai_models.models}
             free_model_names = {m.name for m in free_models}
-            
-            # Add any free models that are not in the user's current list
             missing_names = free_model_names - current_model_names
+            
             if missing_names:
-                # Add missing free models to user's list
                 for model in free_models:
                     if model.name in missing_names:
                         user_ai_models.models.append(model)
                 await user_ai_models.save()
-                logger.info(f"[DEBUG] Added missing free models {missing_names} to user {user_id}")
+                logger.info("Added missing free models %s to user %s", missing_names, user_id)
         
-        logger.info(f"[DEBUG] Returning models for user {user_id}: {user_ai_models.models}")
         return user_ai_models.models
     except Exception as e:
-        logger.error(f"[DEBUG] Error ensuring user has models: {e}")
+        logger.error("Error ensuring user has models: %s", e)
         return []
 
 

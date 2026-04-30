@@ -12,43 +12,6 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post(
-    "/ai-chat-message",
-    response_model=ChatMessageResponse,
-    status_code=200,
-    summary="Send message to AI model",
-    description="Send a message to an AI model and receive a response"
-)
-async def ai_chat_message(
-    request: ChatMessageRequest,
-    current_user: User = Depends(get_current_active_user())
-):
-    """AI chat message endpoint.
-    
-    Args:
-        request: Chat message request with model name and message
-        current_user: Currently authenticated active user
-        
-    Returns:
-        ChatMessageResponse: Response with model name and generated text
-    """
-    # Check if user is allowed to use this model
-    has_permission = await check_model_permission(str(current_user.id), request.model_name)
-    
-    if not has_permission:
-        raise HTTPException(
-            status_code=403,
-            detail="User not authorized to use this model"
-        )
-    
-    # TODO: Integrate with ai_chat_message module for actual AI processing
-    # For now, return a placeholder response
-    return ChatMessageResponse(
-        model_name=request.model_name,
-        text="Placeholder response - module integration pending"
-    )
-
-
 @router.get(
     "/available-models",
     response_model=AvailableModelsResponse,
@@ -68,7 +31,6 @@ async def get_available_models(
         AvailableModelsResponse: List of available model names
     """
     models = await get_user_available_models(str(current_user.id))
-    logger.info(f"[DEBUG] Returning available models for user {current_user.id}: {models}")
     # Convert ModelInfo objects to dictionaries for response serialization
-    models_dict = [m.model_dump() if hasattr(m, 'model_dump') else m.dict() for m in models]
+    models_dict = [m.model_dump() for m in models]
     return AvailableModelsResponse(models=models_dict)

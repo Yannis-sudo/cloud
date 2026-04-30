@@ -22,8 +22,10 @@ async def detailed_health_check():
         
         services = {
             "database": "healthy" if db_healthy else "unhealthy",
-            "email_service": "healthy",  # TODO: Implement actual check
-            "file_storage": "healthy"   # TODO: Implement actual check
+            # TODO: Implement actual email service health check
+            "email_service": "healthy",
+            # TODO: Implement actual file storage health check
+            "file_storage": "healthy"
         }
         
         overall_status = "healthy" if all(status == "healthy" for status in services.values()) else "unhealthy"
@@ -33,7 +35,7 @@ async def detailed_health_check():
             version="1.0.0",
             services=services
         )
-    except Exception as e:
+    except Exception:
         return HealthCheckResponse(
             status="unhealthy",
             version="1.0.0",
