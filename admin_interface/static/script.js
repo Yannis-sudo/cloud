@@ -18,6 +18,12 @@ async function addModel() {
     const aliasInput = document.getElementById('modelAlias');
     const descInput = document.getElementById('modelDescription');
     
+    if (!nameInput || !aliasInput || !descInput) {
+        console.error('[DEBUG] Input elements not found');
+        showMessage('Error: Input elements not found', 'error');
+        return;
+    }
+    
     const modelName = nameInput.value.trim();
     const modelAlias = aliasInput.value.trim();
     const modelDescription = descInput.value.trim();
@@ -115,14 +121,13 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Load models on page load
+// Load models on page load and setup event listeners
 document.addEventListener('DOMContentLoaded', async () => {
+    // Load models
     const models = await fetchModels();
     renderModels(models);
-});
-
-// Allow adding model with Enter key on any input field
-document.addEventListener('DOMContentLoaded', () => {
+    
+    // Allow adding model with Enter key on any input field
     const inputs = ['modelName', 'modelAlias', 'modelDescription'];
     inputs.forEach(id => {
         const element = document.getElementById(id);
